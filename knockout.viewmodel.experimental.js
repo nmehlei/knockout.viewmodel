@@ -343,12 +343,16 @@
             if (idName = viewModelObj.___$childIdName) {//id is specified, create, update, and delete by id
                 foundModels = [];
                 foundViewmodels = [];
+                var old = unwrapped.slice();
+                unwrapped = [];
                 for (p = modelObj.length - 1; p >= 0; p--) {
                     modelId = modelObj[p][idName];
-                    for (q = unwrapped.length - 1; q >= 0; q--) {
-                        child = unwrapped[q];
-                        unwrappedChild = unwrap(child);
-                        viewmodelId = unwrap(unwrappedChild[idName]);
+
+                    // search for pre-existing item
+                    for (q = old.length - 1; q >= 0; q--) {
+                        child = old[q];
+                        oldChild = unwrap(child);
+                        viewmodelId = unwrap(oldChild[idName]);
                         if (viewmodelId === modelId) {//If updated model id equals viewmodel id then update viewmodel object with model data
                             console.log('updated item with id ' + viewmodelId);
                             if (child.___$mapCustom) {
@@ -362,13 +366,13 @@
                                     //if it's smart enough to do that, assume it updated it correctly	
                                 }
                                 else {
-                                    unwrapped[q] = child.___$mapCustom(modelObj[p], child);
+                                    old[q] = child.___$mapCustom(modelObj[p], child);
                                 }
                             }
                             else {
-                                
                                 if (!!noncontiguousObjectUpdateCount) {//keep in sync with else block below
-                                    var fnRecursiveArrayChildObjectUpdate = (function (modelObj, viewModelObj, p, q) {
+                                    throw new Error('noncontiguous behaviour is not supported in nmehlei-variant of ko.viewmodel, sorry');
+                                    /*var fnRecursiveArrayChildObjectUpdate = (function (modelObj, viewModelObj, p, q) {
                                         return function () {
                                             recursiveUpdate(modelObj[p], unwrapped[q], {
                                                 name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
@@ -378,10 +382,10 @@
                                         };
                                     }(modelObj, viewModelObj, p, q));
                                     noncontiguousObjectUpdateCount(noncontiguousObjectUpdateCount() + 1);
-                                    setTimeout(fnRecursiveArrayChildObjectUpdate, 0);
+                                    setTimeout(fnRecursiveArrayChildObjectUpdate, 0);*/
                                 }
                                 else {//keep in sync with if block above
-                                    recursiveUpdate(modelObj[p], unwrapped[q], {
+                                    recursiveUpdate(modelObj[p], old[q], {
                                         name: "[i]", parent: context.name + "[i]", full: context.full + "[i]"
                                     });
                                 }
@@ -390,9 +394,17 @@
                             foundModels[p] = true;
                             break;
                         }
-                    }
+                    } 
                 }
-                for (q = unwrapped.length - 1; q >= 0; q--) {
+
+// add new ones
+                for (p = modelObj.length - 1; p >= 0; p--) {
+                    if (!foundModels[p]) {//If not found and updated in viewmodel then add to viewmodel
+                        viewModelObj.pushFromModel(modelObj[p]);
+                        console.log('added item with id ' + p);
+                    }
+                    }
+                /*for (q = unwrapped.length - 1; q >= 0; q--) {
                     if (!foundViewmodels[q]) {//If missing from model remove from viewmodel                        
                         viewModelObj.splice(q, 1);
                         console.log('removed item with id ' + q)
@@ -403,25 +415,7 @@
                         viewModelObj.pushFromModel(modelObj[p]);
                         console.log('added item with id ' + p);
                     }
-                }
-                unwrapped.sort(function(a, b) {
-                    var aItem, bItem;
-                    var aId = a[idName];
-                    var bId = b[idName];
-                    for(var i = modelObj.length - 1; i >= 0; i--) {
-                        var xItem = modelObj[i];
-                        var xId = xItem[idName];
-                        if(aId === xId)
-                            aItem = xItem;
-                        if(bId === xId)
-                            bItem = xItem;
-                    }
-                    var aPos = modelObj.indexOf(aItem);
-                    var bPos = modelObj.indexOf(bItem);
-                    if(aPos < bPos) return -1;
-                    if(aPos > bPos) return 1;
-                    return 0;
-                });
+                }*/
             }
             else {//no id specified, replace old array items with new array items
                 tempArray = [];
