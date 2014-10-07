@@ -1,3 +1,6 @@
+This is an experimental fork!
+==================
+
 The knockout viewmodel plugin, Copyright (c) 2012 Dave Herren
 
 The MIT License (MIT)
